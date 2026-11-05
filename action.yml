@@ -1,0 +1,45 @@
+name: Since.dev check
+description: Check a pull request's dependencies for breaking changes, retiring AI models, removed APIs and runtimes past end of life.
+author: Since.dev
+branding:
+  icon: calendar
+  color: gray-dark
+inputs:
+  api-key:
+    description: A Since.dev workspace API key. Store it as a secret, for example SINCE_DEV_KEY.
+    required: false
+  files:
+    description: Which files to check, one pattern per line, relative to the repository root. `**/` matches any folder; `*` matches within a name.
+    required: false
+    default: |
+      **/package.json
+      **/requirements*.txt
+      **/pyproject.toml
+      **/go.mod
+      **/Cargo.toml
+      **/Gemfile
+      **/composer.json
+      **/pom.xml
+      **/build.gradle
+      **/build.gradle.kts
+      **/*.csproj
+  max-files:
+    description: The most files one run checks. Each file is one check, and each check costs credits.
+    required: false
+    default: "10"
+  fail-on:
+    description: Fail the run on a proven finding of this severity or higher: low, medium, high, critical, or none to never fail.
+    required: false
+    default: high
+  api-url:
+    description: The API to call.
+    required: false
+    default: https://api.since.dev
+outputs:
+  findings:
+    description: How many findings the checked files have.
+  failing:
+    description: How many of them are at or above fail-on and proven.
+runs:
+  using: node24
+  main: index.mjs
