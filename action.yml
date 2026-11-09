@@ -28,7 +28,7 @@ inputs:
     required: false
     default: "10"
   fail-on:
-    description: Fail the run on a proven finding of this severity or higher: low, medium, high, critical, or none to never fail.
+    description: "Fail the run on a proven finding of this severity or higher: low, medium, high, critical, or none to never fail."
     required: false
     default: high
   api-url:
