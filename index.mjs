@@ -134,6 +134,7 @@ export async function run({ root = process.env.GITHUB_WORKSPACE || process.cwd()
   const rows = []
   const notes = []
   let annotations = 0
+  let asOf = null
   for (const file of files) {
     // go.sum is checksums, not the versions a build uses: go.mod says those, and checking go.sum would only spend credits.
     if (path.posix.basename(file) === "go.sum") {
@@ -173,6 +174,8 @@ export async function run({ root = process.env.GITHUB_WORKSPACE || process.cwd()
       const releases = Number(body.reading.releases) || 0
       notes.push(`${file}: Since is still reading ${releases ? `${releases.toLocaleString("en-US")} newer release${releases === 1 ? "" : "s"}` : "newer releases"} of its dependencies. A later run includes what they changed.`)
     }
+    // What the sources behind the answer had been read up to: the run is current as of the oldest of them.
+    if (typeof body?.coverage?.asOf === "string" && (asOf === null || body.coverage.asOf < asOf)) asOf = body.coverage.asOf
     for (const finding of body?.findings ?? []) {
       const where = finding.where?.find((place) => place.file) ?? { file, line: null }
       const failing = fails(finding, failOn)
@@ -195,6 +198,8 @@ export async function run({ root = process.env.GITHUB_WORKSPACE || process.cwd()
   summary(rows.length === 0
     ? `No findings in ${files.length === 1 ? "the 1 file" : `the ${files.length} files`} checked.`
     : `${rows.length} finding${rows.length === 1 ? "" : "s"} in ${files.length} file${files.length === 1 ? "" : "s"}${failOn === "none" ? "." : `, ${failing} at ${failOn} or above and proven.`}`)
+  if (asOf) summary(`\nCurrent as of ${asOf.replace("T", " ").replace(/:\d{2}(\.\d+)?Z$/, " UTC")}.`)
+  output("as-of", asOf ?? "")
   if (rows.length > 0) {
     summary("")
     summary("| Severity | What | Where | When | Move to |")

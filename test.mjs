@@ -157,3 +157,14 @@ test("max-files caps what one run checks, and says so", async () => {
   assert.match(result.log, /3 files matched; checked the first 2/)
   assert.match(result.summary, /No findings in the 2 files checked\./)
 })
+
+test("says what the run is current as of: the oldest of the answers' sources", async () => {
+  const root = repo({ "a/package.json": "{}", "b/package.json": "{}" })
+  const asOf = ["2026-11-21T09:10:00.000Z", "2026-11-21T08:58:42.000Z"]
+  let at = 0
+  const result = await withInputs({ "api-key": "k", files: "**/package.json" }, () =>
+    run({ root, fetchImpl: async () => Response.json({ findings: [], coverage: { sources: [], missing: [], asOf: asOf[at++] } }) }))
+  assert.equal(result.code, 0)
+  assert.match(result.summary, /Current as of 2026-11-21 08:58 UTC\./)
+  assert.match(result.output, /as-of=2026-11-21T08:58:42.000Z\n/)
+})
