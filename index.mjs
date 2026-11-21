@@ -50,6 +50,14 @@ function output(name, value) {
   if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, `${name}=${value}\n`)
 }
 
+/** What to move to, and the exact line to write or the command to run when Since read one back and checked it. */
+function moveTo(finding) {
+  const edit = finding.edit
+  if (edit && typeof edit.command === "string" && edit.command) return `${cell(finding.replacement)}: run \`${cell(edit.command)}\``
+  if (edit && typeof edit.to === "string" && edit.to.trim()) return `${cell(finding.replacement)}: write \`${cell(edit.to.trim())}\` at line ${cell(edit.line)}`
+  return cell(finding.replacement)
+}
+
 function summary(markdown) {
   if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${markdown}\n`)
   else log(markdown)
@@ -212,7 +220,7 @@ export async function run({ root = process.env.GITHUB_WORKSPACE || process.cwd()
       const subject = [finding.surface?.name, finding.version].filter(Boolean).join(" ")
       const place = where.line ? `${where.file}:${where.line}` : where.file
       const state = finding.state === "needs_review" ? " (not settled)" : ""
-      summary(`| ${cell(finding.severity)}${state} | ${cell(subject)}: ${cell(finding.reason)} | \`${cell(place)}\` | ${cell(when(finding))} | ${cell(finding.replacement)} |`)
+      summary(`| ${cell(finding.severity)}${state} | ${cell(subject)}: ${cell(finding.reason)} | \`${cell(place)}\` | ${cell(when(finding))} | ${moveTo(finding)} |`)
     }
     if (sorted.length > MAX_ROWS) summary(`\nAnd ${sorted.length - MAX_ROWS} more, less severe.`)
   }
